@@ -3,6 +3,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics"; // Ensure this import is also at the top
 
 // Firebase config
 const firebaseConfig = {
@@ -15,16 +16,18 @@ const firebaseConfig = {
   measurementId: "G-2ZD3KKMF7H"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+// Initialize Firebase and export the app instance as 'firebaseApp'
+// This makes it available for import by other files like admin.tsx
+export const firebaseApp = initializeApp(firebaseConfig);
 
-// Only initialize analytics in the browser
+// Get other Firebase services using the initialized app
+export const db = getFirestore(firebaseApp);
+export const auth = getAuth(firebaseApp);
+
+// Only initialize analytics in the browser to prevent issues during server-side rendering (SSR)
+// The `import` statement for `firebase/analytics` should be at the top with other imports.
 if (typeof window !== "undefined") {
-  import("firebase/analytics").then(({ getAnalytics }) => {
-    getAnalytics(app);
-  });
+  getAnalytics(firebaseApp);
 }
 
-export { db, auth };
+// You can also export other services as needed, but firebaseApp, db, and auth are common.
