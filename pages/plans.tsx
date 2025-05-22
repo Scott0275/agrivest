@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase"; // adjust path if needed
+import { useRouter } from "next/router";
 
 type Plan = {
   id: string;
@@ -8,10 +9,12 @@ type Plan = {
   monthlyROI: number;
   duration?: string;
   minAmount?: number;
+  maxAmount: number;
 };
 
 export default function Plans() {
   const [plans, setPlans] = useState<Plan[]>([]);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchPlans = async () => {
@@ -30,6 +33,14 @@ export default function Plans() {
     fetchPlans();
   }, []);
 
+  const handleSelectPlan = (plan: Plan) => {
+    console.log("Selected Plan:", plan);
+    // Option A: Save to localStorage (if you're not yet using global state)
+    localStorage.setItem("selectedPlan", JSON.stringify(plan));
+    // Option B: Or redirect to investment form page
+    router.push("/invest");
+  };
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6 text-center">Investment Plans</h1>
@@ -45,8 +56,12 @@ export default function Plans() {
             {plan.minAmount && (
               <p className="text-gray-700">Min Investment: ₦{plan.minAmount.toLocaleString()}</p>
             )}
-            <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-              Select Plan
+            <p className="text-gray-700">Max Investment: ₦{plan.maxAmount.toLocaleString()}</p>
+            <button
+              className="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              onClick={() => handleSelectPlan(plan)}
+            >
+              Invest Now
             </button>
           </div>
         ))}
