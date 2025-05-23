@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { firebaseApp } from '../../lib/firebase'; // Ensure this path is correct based on your setup
+import { onAuthStateChanged } from 'firebase/auth'; // Only import onAuthStateChanged
+import { auth } from '../../lib/firebase'; // <--- Change: Import 'auth' directly
 import Link from 'next/link'; // Import Link for internal navigation
 
 // Icons for Admin Dashboard
@@ -26,10 +26,12 @@ const ReportsIcon = ({ className = "w-10 h-10 text-purple-700" }: { className?: 
 
 const AdminDashboard = () => {
   const router = useRouter();
-  const auth = getAuth(firebaseApp);
+  // const auth = getAuth(firebaseApp); // <--- Original line
+  // The 'auth' object is already initialized and exported from firebase.ts
+  // So, we just import it directly from the firebase config file.
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => { // <--- Use 'auth' directly
       // You might want to check if the user is an actual admin here
       // e.g., by checking a custom claim or a document in Firestore
       if (!user) {
@@ -39,7 +41,7 @@ const AdminDashboard = () => {
     });
 
     return () => unsubscribe();
-  }, [auth, router]);
+  }, [router]); // 'auth' doesn't need to be in dependency array if it's a constant export
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
