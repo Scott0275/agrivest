@@ -124,7 +124,7 @@ export default function AdminPlans() {
               <strong>{plan.name}</strong> – {plan.monthlyROI}% monthly ROI
             </div>
             <div>
-              ₦{plan.minAmount?.toLocaleString()} - ₦
+              ${plan.minAmount?.toLocaleString()} - $
               {plan.maxAmount?.toLocaleString()}
             </div>
             <button

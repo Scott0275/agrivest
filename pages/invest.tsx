@@ -22,21 +22,25 @@ export default function InvestPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Ensure the plan is loaded, otherwise redirect
     const savedPlan = localStorage.getItem("selectedPlan");
     if (savedPlan) {
       setSelectedPlan(JSON.parse(savedPlan));
     } else {
-      router.push("/plans");
+      router.push("/plans"); // Redirect to plans if no plan is selected
     }
   }, [router]);
 
   const handleSubmit = async () => {
-    if (!user || !selectedPlan) return;
+    if (!user || !selectedPlan) {
+      setError("Please log in and select a plan.");
+      return;
+    }
 
     const investmentAmount = parseFloat(amount);
 
-    if (isNaN(investmentAmount)) {
-      setError("Please enter a valid number.");
+    if (isNaN(investmentAmount) || investmentAmount <= 0) {
+      setError("Please enter a valid positive number.");
       return;
     }
 
@@ -44,16 +48,17 @@ export default function InvestPage() {
       selectedPlan.minAmount &&
       investmentAmount < selectedPlan.minAmount
     ) {
-      setError(`Minimum amount is ₦${selectedPlan.minAmount.toLocaleString()}`);
+      setError(`Minimum investment for ${selectedPlan.name} is $${selectedPlan.minAmount.toLocaleString()}.`);
       return;
     }
 
     if (investmentAmount > selectedPlan.maxAmount) {
-      setError(`Maximum amount is ₦${selectedPlan.maxAmount.toLocaleString()}`);
+      setError(`Maximum investment for ${selectedPlan.name} is $${selectedPlan.maxAmount.toLocaleString()}.`);
       return;
     }
 
     setLoading(true);
+    setError(""); // Clear previous errors
     try {
       await addDoc(collection(db, "investments"), {
         userId: user.uid,
@@ -64,51 +69,70 @@ export default function InvestPage() {
         createdAt: serverTimestamp(),
       });
 
-      alert("Investment successful!");
+      alert("Investment successful! You can now track it in My Investments.");
       router.push("/my-investments");
     } catch (err) {
       console.error("Investment error:", err);
-      setError("Failed to submit investment. Try again.");
+      setError("Failed to submit investment. Please try again or contact support.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!selectedPlan) return null;
+  // Show a loading/redirecting message if plan isn't loaded yet
+  if (!selectedPlan) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+        <p className="text-lg text-gray-600">Loading plan details or redirecting...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Invest in {selectedPlan.name}</h1>
-      <p className="mb-2">Monthly ROI: {selectedPlan.monthlyROI}%</p>
-      {selectedPlan.duration && (
-        <p className="mb-2">Duration: {selectedPlan.duration}</p>
-      )}
-      {selectedPlan.minAmount && (
-        <p className="mb-2">
-          Min: ₦{selectedPlan.minAmount.toLocaleString()}
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-lg border border-gray-100">
+        <h1 className="text-3xl md:text-4xl font-bold text-green-700 mb-6 text-center">
+          Invest in <span className="text-green-800">{selectedPlan.name}</span>
+        </h1>
+        <p className="text-lg text-gray-700 mb-2">
+          Projected Monthly ROI: <span className="font-semibold text-green-600">{selectedPlan.monthlyROI}%</span>
         </p>
-      )}
-      <p className="mb-4">
-        Max: ₦{selectedPlan.maxAmount.toLocaleString()}
-      </p>
+        {selectedPlan.duration && (
+          <p className="text-gray-600 mb-2">Duration: {selectedPlan.duration}</p>
+        )}
+        {selectedPlan.minAmount && (
+          <p className="text-gray-600 mb-2">
+            Minimum Investment: <span className="font-semibold">${selectedPlan.minAmount.toLocaleString()}</span>
+          </p>
+        )}
+        <p className="text-gray-600 mb-6">
+          Maximum Investment: <span className="font-semibold">${selectedPlan.maxAmount.toLocaleString()}</span>
+        </p>
 
-      <input
-        type="number"
-        placeholder="Enter amount to invest"
-        value={amount}
-        onChange={(e) => setAmount(e.target.value)}
-        className="w-full px-4 py-2 border rounded mb-4"
-      />
+        <div className="mb-4">
+          <label htmlFor="amount" className="block text-gray-700 text-sm font-bold mb-2">
+            Amount to Invest ($)
+          </label>
+          <input
+            id="amount"
+            type="number"
+            placeholder="e.g., 50000"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-lg"
+          />
+        </div>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+        {error && <p className="text-red-600 text-sm mb-4 bg-red-50 p-3 rounded-md border border-red-200">{error}</p>}
 
-      <button
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50"
-        onClick={handleSubmit}
-        disabled={loading}
-      >
-        {loading ? "Processing..." : "Confirm Investment"}
-      </button>
+        <button
+          className="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg shadow-md hover:shadow-lg"
+          onClick={handleSubmit}
+          disabled={loading || !amount || parseFloat(amount) <= 0}
+        >
+          {loading ? "Processing Investment..." : "Confirm Investment"}
+        </button>
+      </div>
     </div>
   );
 }
