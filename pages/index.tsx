@@ -177,7 +177,6 @@ export default function LandingPage() {
 
       {/* How It Works Section */}
       <section id="how-it-works" className="px-6 md:px-20 py-16 md:py-20 bg-white">
-        <h1 className="text-4xl font-bold text-green-600">Tailwind is working! 🌿</h1>
         <h2 className="text-3xl md:text-4xl font-bold text-center text-green-700 mb-16">How AgriVest Works</h2>
         <div className="grid md:grid-cols-3 gap-10 md:gap-12 text-center">
           {howItWorksSteps.map((step) => (
